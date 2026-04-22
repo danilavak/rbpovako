@@ -72,7 +72,7 @@ class RecruitingCrudControllerTests {
         String created = create("/api/candidates", """
                 {
                   "fullName": "Ivan Petrov",
-                  "email": "ivan.petrov@example.com",
+                  "email": "ivan.petrov.test@example.com",
                   "phone": "+79990000000",
                   "resume": "Java, SQL"
                 }
@@ -82,18 +82,21 @@ class RecruitingCrudControllerTests {
 
         mockMvc.perform(get("/api/candidates/{id}", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email", equalTo("ivan.petrov@example.com")));
+                .andExpect(jsonPath("$.email", equalTo("ivan.petrov.test@example.com")));
     }
 
     @Test
     void applicationEndpointsWork() throws Exception {
+        Long vacancyId = createVacancy("Backend developer");
+        Long candidateId = createCandidate("Petr Ivanov", "petr.ivanov@example.com");
+
         String created = create("/api/applications", """
                 {
-                  "vacancyId": 1,
-                  "candidateId": 1,
+                  "vacancyId": %d,
+                  "candidateId": %d,
                   "status": "NEW"
                 }
-                """);
+                """.formatted(vacancyId, candidateId));
 
         Long id = JsonTestHelper.idFrom(created);
 
@@ -101,26 +104,28 @@ class RecruitingCrudControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "vacancyId": 1,
-                                  "candidateId": 1,
+                                  "vacancyId": %d,
+                                  "candidateId": %d,
                                   "status": "IN_REVIEW"
                                 }
-                                """))
+                                """.formatted(vacancyId, candidateId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", equalTo("IN_REVIEW")));
     }
 
     @Test
     void interviewEndpointsWork() throws Exception {
+        Long applicationId = createApplication();
+
         String created = create("/api/interviews", """
                 {
-                  "applicationId": 1,
+                  "applicationId": %d,
                   "interviewer": "HR manager",
                   "startsAt": "2026-04-20T10:00:00",
                   "endsAt": "2026-04-20T11:00:00",
                   "status": "PLANNED"
                 }
-                """);
+                """.formatted(applicationId));
 
         Long id = JsonTestHelper.idFrom(created);
 
@@ -131,19 +136,75 @@ class RecruitingCrudControllerTests {
 
     @Test
     void offerEndpointsWork() throws Exception {
+        Long applicationId = createApplication();
+        Long candidateId = JsonTestHelper.longValueFrom(
+                mockMvc.perform(get("/api/applications/{id}", applicationId))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString(),
+                "candidateId"
+        );
+
         String created = create("/api/offers", """
                 {
-                  "applicationId": 1,
-                  "candidateId": 1,
+                  "applicationId": %d,
+                  "candidateId": %d,
                   "salary": 190000,
                   "status": "SENT"
                 }
-                """);
+                """.formatted(applicationId, candidateId));
 
         Long id = JsonTestHelper.idFrom(created);
 
         mockMvc.perform(delete("/api/offers/{id}", id))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void businessScenarioWorks() throws Exception {
+        Long vacancyId = createVacancy("Team lead");
+        Long candidateId = createCandidate("Anna Volkova", "anna.volkova@example.com");
+
+        String application = create("/api/business/applications/apply", """
+                {
+                  "vacancyId": %d,
+                  "candidateId": %d
+                }
+                """.formatted(vacancyId, candidateId));
+        Long applicationId = JsonTestHelper.idFrom(application);
+
+        String interview = create("/api/business/interviews/schedule", """
+                {
+                  "applicationId": %d,
+                  "interviewer": "Tech lead",
+                  "startsAt": "2026-04-21T10:00:00",
+                  "endsAt": "2026-04-21T11:00:00"
+                }
+                """.formatted(applicationId));
+        Long interviewId = JsonTestHelper.idFrom(interview);
+
+        mockMvc.perform(post("/api/business/interviews/{id}/complete", interviewId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "successful": true
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", equalTo("COMPLETED")));
+
+        String offer = create("/api/business/offers/create", """
+                {
+                  "applicationId": %d,
+                  "salary": 250000
+                }
+                """.formatted(applicationId));
+        Long offerId = JsonTestHelper.idFrom(offer);
+
+        mockMvc.perform(post("/api/business/offers/{id}/accept", offerId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", equalTo("ACCEPTED")));
     }
 
     private String create(String path, String body) throws Exception {
@@ -154,5 +215,44 @@ class RecruitingCrudControllerTests {
                 .andExpect(jsonPath("$.id").exists())
                 .andReturn();
         return result.getResponse().getContentAsString();
+    }
+
+    private Long createApplication() throws Exception {
+        Long vacancyId = createVacancy("QA engineer");
+        Long candidateId = createCandidate("Sergey Fedorov " + System.nanoTime(), "sergey" + System.nanoTime() + "@example.com");
+        String application = create("/api/applications", """
+                {
+                  "vacancyId": %d,
+                  "candidateId": %d,
+                  "status": "NEW"
+                }
+                """.formatted(vacancyId, candidateId));
+        return JsonTestHelper.idFrom(application);
+    }
+
+    private Long createVacancy(String title) throws Exception {
+        String vacancy = create("/api/vacancies", """
+                {
+                  "title": "%s",
+                  "description": "Test vacancy",
+                  "department": "IT",
+                  "salaryFrom": 100000,
+                  "salaryTo": 150000,
+                  "status": "OPEN"
+                }
+                """.formatted(title));
+        return JsonTestHelper.idFrom(vacancy);
+    }
+
+    private Long createCandidate(String fullName, String email) throws Exception {
+        String candidate = create("/api/candidates", """
+                {
+                  "fullName": "%s",
+                  "email": "%s",
+                  "phone": "+79990000001",
+                  "resume": "Test resume"
+                }
+                """.formatted(fullName, email));
+        return JsonTestHelper.idFrom(candidate);
     }
 }
