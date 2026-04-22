@@ -14,41 +14,41 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ru.vako.rbpovako.model.Application;
-import ru.vako.rbpovako.service.RecruitingStorage;
+import ru.vako.rbpovako.service.RecruitingService;
 
 @RestController
 @RequestMapping("/api/applications")
 public class ApplicationController {
-    private final RecruitingStorage storage;
+    private final RecruitingService service;
 
-    public ApplicationController(RecruitingStorage storage) {
-        this.storage = storage;
+    public ApplicationController(RecruitingService service) {
+        this.service = service;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Application create(@RequestBody Application application) {
-        return storage.applications().create(application);
+        return service.saveApplication(application);
     }
 
     @GetMapping
     public List<Application> findAll() {
-        return storage.applications().findAll();
+        return service.findApplications();
     }
 
     @GetMapping("/{id}")
     public Application findById(@PathVariable Long id) {
-        return storage.applications().findById(id);
+        return service.findApplication(id);
     }
 
     @PutMapping("/{id}")
     public Application update(@PathVariable Long id, @RequestBody Application application) {
-        return storage.applications().update(id, application);
+        return service.updateApplication(id, application);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        storage.applications().delete(id);
+        service.deleteApplication(id);
     }
 }

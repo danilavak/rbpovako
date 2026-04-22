@@ -1,10 +1,31 @@
 package ru.vako.rbpovako.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+
+@Entity
+@Table(name = "candidates", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_candidates_email", columnNames = "email")
+})
 public class Candidate implements Identifiable {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String fullName;
+
+    @Column(nullable = false)
     private String email;
+
     private String phone;
+
+    @Column(length = 4000)
     private String resume;
 
     public Long getId() {
