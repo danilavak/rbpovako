@@ -14,41 +14,41 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ru.vako.rbpovako.model.Offer;
-import ru.vako.rbpovako.service.RecruitingStorage;
+import ru.vako.rbpovako.service.RecruitingService;
 
 @RestController
 @RequestMapping("/api/offers")
 public class OfferController {
-    private final RecruitingStorage storage;
+    private final RecruitingService service;
 
-    public OfferController(RecruitingStorage storage) {
-        this.storage = storage;
+    public OfferController(RecruitingService service) {
+        this.service = service;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Offer create(@RequestBody Offer offer) {
-        return storage.offers().create(offer);
+        return service.saveOffer(offer);
     }
 
     @GetMapping
     public List<Offer> findAll() {
-        return storage.offers().findAll();
+        return service.findOffers();
     }
 
     @GetMapping("/{id}")
     public Offer findById(@PathVariable Long id) {
-        return storage.offers().findById(id);
+        return service.findOffer(id);
     }
 
     @PutMapping("/{id}")
     public Offer update(@PathVariable Long id, @RequestBody Offer offer) {
-        return storage.offers().update(id, offer);
+        return service.updateOffer(id, offer);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        storage.offers().delete(id);
+        service.deleteOffer(id);
     }
 }

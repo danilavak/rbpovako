@@ -10,7 +10,11 @@ final class JsonTestHelper {
     }
 
     static Long idFrom(String json) throws Exception {
+        return longValueFrom(json, "id");
+    }
+
+    static Long longValueFrom(String json, String field) throws Exception {
         JsonNode node = OBJECT_MAPPER.readTree(json);
-        return node.get("id").asLong();
+        return node.get(field).asLong();
     }
 }
