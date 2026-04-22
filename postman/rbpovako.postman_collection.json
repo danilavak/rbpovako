@@ -1,388 +1,547 @@
-{
-  "info": {
-    "name": "rbpovako",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
-    {
-      "name": "Vacancy CRUD",
-      "item": [
-        {
-          "name": "Create vacancy",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vacancies",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Java developer\",\n  \"description\": \"Spring Boot project\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 120000,\n  \"salaryTo\": 180000,\n  \"status\": \"OPEN\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Get vacancies",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/vacancies"
-          }
-        },
-        {
-          "name": "Get vacancy",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/vacancies/{{vacancyId}}"
-          }
-        },
-        {
-          "name": "Update vacancy",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/vacancies/{{vacancyId}}",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Senior Java developer\",\n  \"description\": \"Spring Boot project\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 180000,\n  \"salaryTo\": 240000,\n  \"status\": \"OPEN\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete vacancy",
-          "request": {
-            "method": "DELETE",
-            "url": "{{baseUrl}}/api/vacancies/{{vacancyId}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Candidate CRUD",
-      "item": [
-        {
-          "name": "Create candidate",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/candidates",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Ivan Petrov\",\n  \"email\": \"ivan.petrov.demo@example.com\",\n  \"phone\": \"+79990000000\",\n  \"resume\": \"Java, SQL, Spring\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Get candidates",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/candidates"
-          }
-        },
-        {
-          "name": "Get candidate",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/candidates/{{candidateId}}"
-          }
-        },
-        {
-          "name": "Update candidate",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/candidates/{{candidateId}}",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Ivan Petrov\",\n  \"email\": \"ivan.petrov.demo@example.com\",\n  \"phone\": \"+79990000001\",\n  \"resume\": \"Java, SQL, Spring Boot\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete candidate",
-          "request": {
-            "method": "DELETE",
-            "url": "{{baseUrl}}/api/candidates/{{candidateId}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Application CRUD",
-      "item": [
-        {
-          "name": "Create application",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/applications",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}},\n  \"status\": \"NEW\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Get applications",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/applications"
-          }
-        },
-        {
-          "name": "Get application",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/applications/{{applicationId}}"
-          }
-        },
-        {
-          "name": "Update application",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/applications/{{applicationId}}",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}},\n  \"status\": \"IN_REVIEW\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete application",
-          "request": {
-            "method": "DELETE",
-            "url": "{{baseUrl}}/api/applications/{{applicationId}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Interview CRUD",
-      "item": [
-        {
-          "name": "Create interview",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/interviews",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"HR manager\",\n  \"startsAt\": \"2026-04-22T10:00:00\",\n  \"endsAt\": \"2026-04-22T11:00:00\",\n  \"status\": \"PLANNED\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Get interviews",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/interviews"
-          }
-        },
-        {
-          "name": "Get interview",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/interviews/{{interviewId}}"
-          }
-        },
-        {
-          "name": "Update interview",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/interviews/{{interviewId}}",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"HR manager\",\n  \"startsAt\": \"2026-04-22T10:00:00\",\n  \"endsAt\": \"2026-04-22T11:00:00\",\n  \"status\": \"COMPLETED\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete interview",
-          "request": {
-            "method": "DELETE",
-            "url": "{{baseUrl}}/api/interviews/{{interviewId}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Offer CRUD",
-      "item": [
-        {
-          "name": "Create offer",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/offers",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"candidateId\": {{candidateId}},\n  \"salary\": 190000,\n  \"status\": \"SENT\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Get offers",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/offers"
-          }
-        },
-        {
-          "name": "Get offer",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/offers/{{offerId}}"
-          }
-        },
-        {
-          "name": "Update offer",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/offers/{{offerId}}",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"candidateId\": {{candidateId}},\n  \"salary\": 200000,\n  \"status\": \"SENT\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete offer",
-          "request": {
-            "method": "DELETE",
-            "url": "{{baseUrl}}/api/offers/{{offerId}}"
-          }
-        }
-      ]
-    },
-    {
-      "name": "Business operations",
-      "item": [
-        {
-          "name": "Apply for vacancy",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/business/applications/apply",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}}\n}"
-            }
-          }
-        },
-        {
-          "name": "Schedule interview",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/business/interviews/schedule",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"Tech lead\",\n  \"startsAt\": \"2026-04-23T10:00:00\",\n  \"endsAt\": \"2026-04-23T11:00:00\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Complete interview",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/business/interviews/{{interviewId}}/complete",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"successful\": true\n}"
-            }
-          }
-        },
-        {
-          "name": "Create offer after interview",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": "{{baseUrl}}/api/business/offers/create",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"salary\": 230000\n}"
-            }
-          }
-        },
-        {
-          "name": "Accept offer",
-          "request": {
-            "method": "POST",
-            "url": "{{baseUrl}}/api/business/offers/{{offerId}}/accept"
-          }
-        }
-      ]
-    }
-  ]
+﻿{
+    "info":  {
+                 "name":  "rbpovako",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "item":  [
+                 {
+                     "name":  "Auth and CSRF",
+                     "item":  [
+                                  {
+                                      "name":  "Get CSRF token",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/csrf"
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "const data = pm.response.json();",
+                                                                                    "pm.environment.set(\"csrfToken\", data.token);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Register candidate",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/auth/register",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"username\": \"candidate_demo\",\n  \"email\": \"candidate.demo@example.com\",\n  \"password\": \"Candidate!234\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Current user",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/auth/me"
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Vacancy CRUD",
+                     "item":  [
+                                  {
+                                      "name":  "Create vacancy",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/vacancies",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"title\": \"Java developer\",\n  \"description\": \"Spring Boot project\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 120000,\n  \"salaryTo\": 180000,\n  \"status\": \"OPEN\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get vacancies",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/vacancies"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get vacancy",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/vacancies/{{vacancyId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update vacancy",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/vacancies/{{vacancyId}}",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"title\": \"Senior Java developer\",\n  \"description\": \"Spring Boot project\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 180000,\n  \"salaryTo\": 240000,\n  \"status\": \"OPEN\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete vacancy",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/vacancies/{{vacancyId}}",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ]
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Candidate CRUD",
+                     "item":  [
+                                  {
+                                      "name":  "Create candidate",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/candidates",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"fullName\": \"Ivan Petrov\",\n  \"email\": \"ivan.petrov.demo@example.com\",\n  \"phone\": \"+79990000000\",\n  \"resume\": \"Java, SQL, Spring\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get candidates",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/candidates"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get candidate",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/candidates/{{candidateId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update candidate",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/candidates/{{candidateId}}",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"fullName\": \"Ivan Petrov\",\n  \"email\": \"ivan.petrov.demo@example.com\",\n  \"phone\": \"+79990000001\",\n  \"resume\": \"Java, SQL, Spring Boot\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete candidate",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/candidates/{{candidateId}}",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ]
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Application CRUD",
+                     "item":  [
+                                  {
+                                      "name":  "Create application",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/applications",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}},\n  \"status\": \"NEW\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get applications",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/applications"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get application",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/applications/{{applicationId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update application",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/applications/{{applicationId}}",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}},\n  \"status\": \"IN_REVIEW\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete application",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/applications/{{applicationId}}",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ]
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Interview CRUD",
+                     "item":  [
+                                  {
+                                      "name":  "Create interview",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/interviews",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"HR manager\",\n  \"startsAt\": \"2026-04-22T10:00:00\",\n  \"endsAt\": \"2026-04-22T11:00:00\",\n  \"status\": \"PLANNED\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get interviews",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/interviews"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get interview",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/interviews/{{interviewId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update interview",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/interviews/{{interviewId}}",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"HR manager\",\n  \"startsAt\": \"2026-04-22T10:00:00\",\n  \"endsAt\": \"2026-04-22T11:00:00\",\n  \"status\": \"COMPLETED\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete interview",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/interviews/{{interviewId}}",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ]
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Offer CRUD",
+                     "item":  [
+                                  {
+                                      "name":  "Create offer",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/offers",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"candidateId\": {{candidateId}},\n  \"salary\": 190000,\n  \"status\": \"SENT\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get offers",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/offers"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get offer",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/offers/{{offerId}}"
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Update offer",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/offers/{{offerId}}",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"candidateId\": {{candidateId}},\n  \"salary\": 200000,\n  \"status\": \"SENT\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Delete offer",
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/offers/{{offerId}}",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ]
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Business operations",
+                     "item":  [
+                                  {
+                                      "name":  "Apply for vacancy",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/business/applications/apply",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}}\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Schedule interview",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/business/interviews/schedule",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"Tech lead\",\n  \"startsAt\": \"2026-04-23T10:00:00\",\n  \"endsAt\": \"2026-04-23T11:00:00\"\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Complete interview",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/business/interviews/{{interviewId}}/complete",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"successful\": true\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Create offer after interview",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  "{{baseUrl}}/api/business/offers/create",
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"salary\": 230000\n}"
+                                                               }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Accept offer",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{baseUrl}}/api/business/offers/{{offerId}}/accept",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "X-XSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ]
+                                                  }
+                                  }
+                              ]
+                 }
+             ],
+    "auth":  {
+                 "type":  "basic",
+                 "basic":  [
+                               {
+                                   "key":  "username",
+                                   "value":  "{{username}}",
+                                   "type":  "string"
+                               },
+                               {
+                                   "key":  "password",
+                                   "value":  "{{password}}",
+                                   "type":  "string"
+                               }
+                           ]
+             }
 }
