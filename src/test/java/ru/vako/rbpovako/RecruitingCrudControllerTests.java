@@ -1,6 +1,8 @@
 package ru.vako.rbpovako;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -8,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,11 +19,36 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import ru.vako.rbpovako.model.UserRole;
+import ru.vako.rbpovako.service.UserAccountService;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 class RecruitingCrudControllerTests {
+    private static final String ADMIN_PASSWORD = "Admin!234";
+    private static final String HR_PASSWORD = "HrUser!234";
+    private static final String CANDIDATE_PASSWORD = "Candidate!234";
+
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private UserAccountService userAccountService;
+
+    private String adminUsername;
+    private String hrUsername;
+    private String candidateUsername;
+
+    @BeforeEach
+    void setUpUsers() {
+        String suffix = String.valueOf(System.nanoTime());
+        adminUsername = "admin" + suffix;
+        hrUsername = "hr" + suffix;
+        candidateUsername = "candidate" + suffix;
+        userAccountService.register(adminUsername, adminUsername + "@example.com", ADMIN_PASSWORD, UserRole.ADMIN);
+        userAccountService.register(hrUsername, hrUsername + "@example.com", HR_PASSWORD, UserRole.HR);
+        userAccountService.register(candidateUsername, candidateUsername + "@example.com", CANDIDATE_PASSWORD, UserRole.CANDIDATE);
+    }
 
     @Test
     void vacancyCrudWorks() throws Exception {
@@ -42,6 +70,8 @@ class RecruitingCrudControllerTests {
                 .andExpect(jsonPath("$.title", equalTo("Java developer")));
 
         mockMvc.perform(put("/api/vacancies/{id}", id)
+                        .with(httpBasic(hrUsername, HR_PASSWORD))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -60,7 +90,9 @@ class RecruitingCrudControllerTests {
         mockMvc.perform(get("/api/vacancies"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(delete("/api/vacancies/{id}", id))
+        mockMvc.perform(delete("/api/vacancies/{id}", id)
+                        .with(httpBasic(adminUsername, ADMIN_PASSWORD))
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/vacancies/{id}", id))
@@ -69,7 +101,7 @@ class RecruitingCrudControllerTests {
 
     @Test
     void candidateEndpointsWork() throws Exception {
-        String created = create("/api/candidates", """
+        String created = createAs("/api/candidates", """
                 {
                   "fullName": "Ivan Petrov",
                   "email": "ivan.petrov.test@example.com",
@@ -80,7 +112,8 @@ class RecruitingCrudControllerTests {
 
         Long id = JsonTestHelper.idFrom(created);
 
-        mockMvc.perform(get("/api/candidates/{id}", id))
+        mockMvc.perform(get("/api/candidates/{id}", id)
+                        .with(httpBasic(hrUsername, HR_PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email", equalTo("ivan.petrov.test@example.com")));
     }
@@ -101,6 +134,8 @@ class RecruitingCrudControllerTests {
         Long id = JsonTestHelper.idFrom(created);
 
         mockMvc.perform(put("/api/applications/{id}", id)
+                        .with(httpBasic(hrUsername, HR_PASSWORD))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -129,7 +164,8 @@ class RecruitingCrudControllerTests {
 
         Long id = JsonTestHelper.idFrom(created);
 
-        mockMvc.perform(get("/api/interviews/{id}", id))
+        mockMvc.perform(get("/api/interviews/{id}", id)
+                        .with(httpBasic(hrUsername, HR_PASSWORD)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.interviewer", equalTo("HR manager")));
     }
@@ -138,7 +174,8 @@ class RecruitingCrudControllerTests {
     void offerEndpointsWork() throws Exception {
         Long applicationId = createApplication();
         Long candidateId = JsonTestHelper.longValueFrom(
-                mockMvc.perform(get("/api/applications/{id}", applicationId))
+                mockMvc.perform(get("/api/applications/{id}", applicationId)
+                                .with(httpBasic(hrUsername, HR_PASSWORD)))
                         .andExpect(status().isOk())
                         .andReturn()
                         .getResponse()
@@ -157,7 +194,9 @@ class RecruitingCrudControllerTests {
 
         Long id = JsonTestHelper.idFrom(created);
 
-        mockMvc.perform(delete("/api/offers/{id}", id))
+        mockMvc.perform(delete("/api/offers/{id}", id)
+                        .with(httpBasic(adminUsername, ADMIN_PASSWORD))
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -185,6 +224,8 @@ class RecruitingCrudControllerTests {
         Long interviewId = JsonTestHelper.idFrom(interview);
 
         mockMvc.perform(post("/api/business/interviews/{id}/complete", interviewId)
+                        .with(httpBasic(hrUsername, HR_PASSWORD))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -202,13 +243,70 @@ class RecruitingCrudControllerTests {
                 """.formatted(applicationId));
         Long offerId = JsonTestHelper.idFrom(offer);
 
-        mockMvc.perform(post("/api/business/offers/{id}/accept", offerId))
+        mockMvc.perform(post("/api/business/offers/{id}/accept", offerId)
+                        .with(httpBasic(candidateUsername, CANDIDATE_PASSWORD))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", equalTo("ACCEPTED")));
     }
 
+    @Test
+    void securityRulesWork() throws Exception {
+        mockMvc.perform(get("/api/candidates"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/auth/register")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "weak-user",
+                                  "email": "weak-user@example.com",
+                                  "password": "password"
+                                }
+                                """))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/auth/register")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "new-candidate",
+                                  "email": "new-candidate@example.com",
+                                  "password": "Strong!234"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role", equalTo("CANDIDATE")));
+
+        mockMvc.perform(post("/api/vacancies")
+                        .with(httpBasic(candidateUsername, CANDIDATE_PASSWORD))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Closed role",
+                                  "description": "No access",
+                                  "department": "IT",
+                                  "status": "OPEN"
+                                }
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
     private String create(String path, String body) throws Exception {
+        return createAs(path, body, hrUsername, HR_PASSWORD);
+    }
+
+    private String createAs(String path, String body) throws Exception {
+        return createAs(path, body, adminUsername, ADMIN_PASSWORD);
+    }
+
+    private String createAs(String path, String body, String username, String password) throws Exception {
         MvcResult result = mockMvc.perform(post(path)
+                        .with(httpBasic(username, password))
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -231,7 +329,7 @@ class RecruitingCrudControllerTests {
     }
 
     private Long createVacancy(String title) throws Exception {
-        String vacancy = create("/api/vacancies", """
+        String vacancy = createAs("/api/vacancies", """
                 {
                   "title": "%s",
                   "description": "Test vacancy",
@@ -245,7 +343,7 @@ class RecruitingCrudControllerTests {
     }
 
     private Long createCandidate(String fullName, String email) throws Exception {
-        String candidate = create("/api/candidates", """
+        String candidate = createAs("/api/candidates", """
                 {
                   "fullName": "%s",
                   "email": "%s",
