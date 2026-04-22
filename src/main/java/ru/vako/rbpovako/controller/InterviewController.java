@@ -14,41 +14,41 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ru.vako.rbpovako.model.Interview;
-import ru.vako.rbpovako.service.RecruitingStorage;
+import ru.vako.rbpovako.service.RecruitingService;
 
 @RestController
 @RequestMapping("/api/interviews")
 public class InterviewController {
-    private final RecruitingStorage storage;
+    private final RecruitingService service;
 
-    public InterviewController(RecruitingStorage storage) {
-        this.storage = storage;
+    public InterviewController(RecruitingService service) {
+        this.service = service;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Interview create(@RequestBody Interview interview) {
-        return storage.interviews().create(interview);
+        return service.saveInterview(interview);
     }
 
     @GetMapping
     public List<Interview> findAll() {
-        return storage.interviews().findAll();
+        return service.findInterviews();
     }
 
     @GetMapping("/{id}")
     public Interview findById(@PathVariable Long id) {
-        return storage.interviews().findById(id);
+        return service.findInterview(id);
     }
 
     @PutMapping("/{id}")
     public Interview update(@PathVariable Long id, @RequestBody Interview interview) {
-        return storage.interviews().update(id, interview);
+        return service.updateInterview(id, interview);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        storage.interviews().delete(id);
+        service.deleteInterview(id);
     }
 }
