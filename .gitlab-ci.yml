@@ -5,6 +5,7 @@ workflow:
 
 stages:
   - build
+  - test
 
 build:
   stage: build
@@ -17,3 +18,19 @@ build:
   artifacts:
     paths:
       - ./target/*.jar
+
+sast:
+  stage: test
+  tags:
+    - saas-linux-small-amd64
+  script:
+    - chmod +x ./mvnw
+    - py -m pip install --user semgrep
+    - export PATH="/c/Users/danil/AppData/Roaming/Python/Python312/Scripts:$PATH"
+    - semgrep.exe scan --metrics=off --config semgrep/rules.yml --gitlab-sast --gitlab-sast-output gl-sast-report.json . || true
+  artifacts:
+    when: always
+    reports:
+      sast: gl-sast-report.json
+    paths:
+      - gl-sast-report.json
