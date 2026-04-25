@@ -50,6 +50,35 @@ jobs:
       - name: Run SAST
         run: semgrep scan --metrics=off --config p/java --config p/findsecbugs --sarif --sarif-output semgrep.sarif . || true
 
+      - name: Normalize SARIF
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          sarif_path = Path("semgrep.sarif")
+          data = json.loads(sarif_path.read_text(encoding="utf-8"))
+          severity_map = {
+              "info": "0.0",
+              "low": "3.0",
+              "medium": "5.0",
+              "high": "8.0",
+              "critical": "10.0",
+          }
+
+          for run in data.get("runs", []):
+              driver = run.get("tool", {}).get("driver", {})
+              for rule in driver.get("rules", []):
+                  properties = rule.setdefault("properties", {})
+                  value = properties.get("security-severity")
+                  if isinstance(value, str):
+                      mapped = severity_map.get(value.lower())
+                      if mapped is not None:
+                          properties["security-severity"] = mapped
+
+          sarif_path.write_text(json.dumps(data), encoding="utf-8")
+          PY
+
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v4
         with:
