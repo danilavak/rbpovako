@@ -48,7 +48,7 @@ jobs:
         run: python -m pip install semgrep
 
       - name: Run SAST
-        run: semgrep scan --metrics=off --config p/java --config p/findsecbugs --sarif --sarif-output semgrep.sarif . || true
+        run: semgrep scan --metrics=off --config semgrep/rules.yml --sarif --sarif-output semgrep.sarif . || true
 
       - name: Normalize SARIF
         run: |
