@@ -25,9 +25,9 @@ sast:
     - saas-linux-small-amd64
   script:
     - chmod +x ./mvnw
-    - python -m pip install --user semgrep
-    - export PATH="$(python -c "import site; print(site.USER_BASE.replace('\\\\', '/'))")/Scripts:$PATH"
-    - semgrep scan --metrics=off --config p/java --config p/findsecbugs --gitlab-sast --gitlab-sast-output gl-sast-report.json . || true
+    - py -m pip install --user semgrep
+    - export PATH="/c/Users/danil/AppData/Roaming/Python/Python312/Scripts:$PATH"
+    - semgrep.exe scan --metrics=off --config p/java --config p/findsecbugs --gitlab-sast --gitlab-sast-output gl-sast-report.json . || true
   artifacts:
     when: always
     reports:
