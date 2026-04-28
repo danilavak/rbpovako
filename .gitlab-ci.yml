@@ -41,7 +41,7 @@ sca:
     - saas-linux-small-amd64
   script:
     - chmod +x ./mvnw
-    - ./mvnw -B dependency-check:check -DossindexAnalyzerEnabled=false
+    - ./mvnw -B dependency-check:check -DautoUpdate=false -DossindexAnalyzerEnabled=false -DdataDirectory=C:/Users/danil/.m2/repository/org/owasp/dependency-check-data/11.0
     - if [ ! -f target/dependency-check-report.html ]; then printf '<html><body>Dependency-Check report was not generated.</body></html>' > target/dependency-check-report.html; fi
   artifacts:
     when: always
