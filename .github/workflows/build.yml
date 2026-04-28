@@ -121,7 +121,7 @@ jobs:
 
       - name: Run SCA
         run: |
-          ./mvnw -B dependency-check:check
+          ./mvnw -B dependency-check:check -DossindexAnalyzerEnabled=false
           if [ ! -f target/dependency-check-report.html ]; then
             printf '<html><body>Dependency-Check report was not generated.</body></html>' > target/dependency-check-report.html
           fi

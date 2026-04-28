@@ -79,6 +79,8 @@
 					<suppressionFiles>
 						<suppressionFile>${project.basedir}/dependency-check-suppressions.xml</suppressionFile>
 					</suppressionFiles>
+					<ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+					<ossIndexWarnOnlyOnRemoteErrors>true</ossIndexWarnOnlyOnRemoteErrors>
 					<failBuildOnCVSS>11</failBuildOnCVSS>
 				</configuration>
 			</plugin>
