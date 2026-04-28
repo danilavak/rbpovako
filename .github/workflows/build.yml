@@ -101,3 +101,41 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: semgrep.sarif
+
+  sca:
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Java
+        run: |
+          echo "JAVA_HOME=C:\Users\danil\.jdks\openjdk-25" >> $env:GITHUB_ENV
+          echo "C:\Users\danil\.jdks\openjdk-25\bin" >> $env:GITHUB_PATH
+        shell: powershell
+
+      - name: Prepare Maven Wrapper
+        run: |
+          git update-index --chmod=+x mvnw
+          .\mvnw.cmd -version
+        shell: powershell
+
+      - name: Run SCA
+        run: |
+          .\mvnw.cmd -B dependency-check:check -DautoUpdate=false -DossindexAnalyzerEnabled=false -DdataDirectory=C:\Users\danil\.m2\repository\org\owasp\dependency-check-data\11.0
+          if (-not (Test-Path 'target\dependency-check-report.html')) {
+            '<html><body>Dependency-Check report was not generated.</body></html>' | Set-Content -Path 'target\dependency-check-report.html'
+          }
+        shell: powershell
+
+      - name: Upload SCA report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: target/dependency-check-report.html
