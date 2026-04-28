@@ -1,0 +1,141 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: eclipse-temurin:21-jdk
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare Maven Wrapper
+        run: chmod +x ./mvnw
+
+      - name: Build
+        run: ./mvnw clean package
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rbpovako-jar
+          path: ./target/*.jar
+
+  sast:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Semgrep
+        run: python -m pip install semgrep
+
+      - name: Run SAST
+        run: semgrep scan --metrics=off --config semgrep/rules.yml --sarif --sarif-output semgrep.sarif . || true
+
+      - name: Normalize SARIF
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          sarif_path = Path("semgrep.sarif")
+          data = json.loads(sarif_path.read_text(encoding="utf-8"))
+          severity_map = {
+              "info": "0.0",
+              "low": "3.0",
+              "medium": "5.0",
+              "high": "8.0",
+              "critical": "10.0",
+          }
+          rule_id_map = {}
+
+          def normalize_rule_id(rule_id: str) -> str:
+              if len(rule_id) <= 255:
+                  return rule_id
+              digest = hashlib.sha1(rule_id.encode("utf-8")).hexdigest()[:12]
+              return f"{rule_id[:220]}-{digest}"
+
+          for run in data.get("runs", []):
+              driver = run.get("tool", {}).get("driver", {})
+              for rule in driver.get("rules", []):
+                  rule_id = rule.get("id")
+                  if isinstance(rule_id, str):
+                      normalized_rule_id = normalize_rule_id(rule_id)
+                      rule_id_map[rule_id] = normalized_rule_id
+                      rule["id"] = normalized_rule_id
+                      rule["name"] = normalized_rule_id
+                  properties = rule.setdefault("properties", {})
+                  value = properties.get("security-severity")
+                  if isinstance(value, str):
+                      mapped = severity_map.get(value.lower())
+                      if mapped is not None:
+                          properties["security-severity"] = mapped
+              for result in run.get("results", []):
+                  rule_id = result.get("ruleId")
+                  if isinstance(rule_id, str) and rule_id in rule_id_map:
+                      result["ruleId"] = rule_id_map[rule_id]
+
+          sarif_path.write_text(json.dumps(data), encoding="utf-8")
+          PY
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: semgrep.sarif
+
+  sca:
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Java
+        run: |
+          echo "JAVA_HOME=C:\Users\danil\.jdks\openjdk-25" >> $env:GITHUB_ENV
+          echo "C:\Users\danil\.jdks\openjdk-25\bin" >> $env:GITHUB_PATH
+        shell: powershell
+
+      - name: Prepare Maven Wrapper
+        run: |
+          git update-index --chmod=+x mvnw
+          .\mvnw.cmd -version
+        shell: powershell
+
+      - name: Run SCA
+        run: |
+          .\mvnw.cmd -B dependency-check:check -DautoUpdate=false -DossindexAnalyzerEnabled=false -DdataDirectory=C:\Users\danil\.m2\repository\org\owasp\dependency-check-data\11.0
+          if (-not (Test-Path 'target\dependency-check-report.html')) {
+            '<html><body>Dependency-Check report was not generated.</body></html>' | Set-Content -Path 'target\dependency-check-report.html'
+          }
+        shell: powershell
+
+      - name: Upload SCA report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: target/dependency-check-report.html
