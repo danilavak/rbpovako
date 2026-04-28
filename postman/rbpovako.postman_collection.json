@@ -1,903 +1,1339 @@
-﻿{
-    "info":  {
-                 "name":  "rbpovako",
-                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-             },
-    "auth":  {
-                 "type":  "basic",
-                 "basic":  [
-                               {
-                                   "key":  "username",
-                                   "value":  "{{username}}",
-                                   "type":  "string"
-                               },
-                               {
-                                   "key":  "password",
-                                   "value":  "{{password}}",
-                                   "type":  "string"
-                               }
-                           ]
-             },
-    "item":  [
-                 {
-                     "name":  "Auth and CSRF",
-                     "item":  [
-                                  {
-                                      "name":  "Get CSRF token",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/csrf"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"CSRF token returned\", function () { pm.response.to.have.status(200); });",
-                                                                                "var body = pm.response.json();",
-                                                                                "pm.environment.set(\"csrfToken\", body.token);",
-                                                                                "pm.test(\"CSRF token saved\", function () { pm.expect(pm.environment.get(\"csrfToken\")).to.not.be.empty; });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Register candidate",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/auth/register",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"username\": \"candidate_{{}}\",\n  \"email\": \"candidate_{{}}@example.com\",\n  \"password\": \"Candidate!234\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Candidate registration works\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Registered user has candidate role\", function () { pm.expect(pm.response.json().role).to.eql(\"CANDIDATE\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Current user",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/auth/me"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Basic auth works\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Current user is admin\", function () { pm.expect(pm.response.json().username).to.eql(pm.environment.get(\"username\")); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  }
-                              ]
-                 },
-                 {
-                     "name":  "CRUD scenario",
-                     "item":  [
-                                  {
-                                      "name":  "Create vacancy",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/vacancies",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"title\": \"Postman Java developer {{}}\",\n  \"description\": \"Spring Boot project\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 120000,\n  \"salaryTo\": 180000,\n  \"status\": \"OPEN\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Vacancy created\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"vacancyId\", pm.response.json().id);"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get vacancies",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/vacancies"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Vacancy list returned\", function () { pm.response.to.have.status(200); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get vacancy",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/vacancies/{{vacancyId}}"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Vacancy returned\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Vacancy id matches\", function () { pm.expect(pm.response.json().id).to.eql(Number(pm.environment.get(\"vacancyId\"))); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Update vacancy",
-                                      "request":  {
-                                                      "method":  "PUT",
-                                                      "url":  "{{baseUrl}}/api/vacancies/{{vacancyId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"title\": \"Postman Senior Java developer\",\n  \"description\": \"Spring Boot project\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 180000,\n  \"salaryTo\": 240000,\n  \"status\": \"OPEN\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Vacancy updated\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Vacancy title updated\", function () { pm.expect(pm.response.json().title).to.eql(\"Postman Senior Java developer\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Create candidate",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/candidates",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"fullName\": \"Postman Candidate {{}}\",\n  \"email\": \"postman.candidate.{{}}@example.com\",\n  \"phone\": \"+79990000000\",\n  \"resume\": \"Java, SQL, Spring\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Candidate created\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"candidateId\", pm.response.json().id);"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get candidates",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/candidates"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Candidate list returned\", function () { pm.response.to.have.status(200); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get candidate",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/candidates/{{candidateId}}"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Candidate returned\", function () { pm.response.to.have.status(200); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Update candidate",
-                                      "request":  {
-                                                      "method":  "PUT",
-                                                      "url":  "{{baseUrl}}/api/candidates/{{candidateId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"fullName\": \"Postman Candidate Updated\",\n  \"email\": \"postman.candidate.updated.{{}}@example.com\",\n  \"phone\": \"+79990000001\",\n  \"resume\": \"Java, SQL, Spring Boot\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Candidate updated\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Candidate name updated\", function () { pm.expect(pm.response.json().fullName).to.eql(\"Postman Candidate Updated\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Create application",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/applications",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}},\n  \"status\": \"NEW\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Application created\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"applicationId\", pm.response.json().id);"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get applications",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/applications"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Application list returned\", function () { pm.response.to.have.status(200); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get application",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/applications/{{applicationId}}"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Application returned\", function () { pm.response.to.have.status(200); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Update application",
-                                      "request":  {
-                                                      "method":  "PUT",
-                                                      "url":  "{{baseUrl}}/api/applications/{{applicationId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}},\n  \"status\": \"IN_REVIEW\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Application updated\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Application status updated\", function () { pm.expect(pm.response.json().status).to.eql(\"IN_REVIEW\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Create interview",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/interviews",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"HR manager\",\n  \"startsAt\": \"2026-04-22T10:00:00\",\n  \"endsAt\": \"2026-04-22T11:00:00\",\n  \"status\": \"PLANNED\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Interview created\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"interviewId\", pm.response.json().id);"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get interviews",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/interviews"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Interview list returned\", function () { pm.response.to.have.status(200); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get interview",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/interviews/{{interviewId}}"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Interview returned\", function () { pm.response.to.have.status(200); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Update interview",
-                                      "request":  {
-                                                      "method":  "PUT",
-                                                      "url":  "{{baseUrl}}/api/interviews/{{interviewId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"HR manager\",\n  \"startsAt\": \"2026-04-22T10:00:00\",\n  \"endsAt\": \"2026-04-22T11:00:00\",\n  \"status\": \"COMPLETED\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Interview updated\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Interview status updated\", function () { pm.expect(pm.response.json().status).to.eql(\"COMPLETED\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Create offer",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/offers",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"candidateId\": {{candidateId}},\n  \"salary\": 190000,\n  \"status\": \"SENT\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Offer created\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"offerId\", pm.response.json().id);"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get offers",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/offers"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Offer list returned\", function () { pm.response.to.have.status(200); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Get offer",
-                                      "request":  {
-                                                      "method":  "GET",
-                                                      "url":  "{{baseUrl}}/api/offers/{{offerId}}"
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Offer returned\", function () { pm.response.to.have.status(200); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Update offer",
-                                      "request":  {
-                                                      "method":  "PUT",
-                                                      "url":  "{{baseUrl}}/api/offers/{{offerId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"applicationId\": {{applicationId}},\n  \"candidateId\": {{candidateId}},\n  \"salary\": 200000,\n  \"status\": \"SENT\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Offer updated\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Offer salary updated\", function () { pm.expect(Number(pm.response.json().salary)).to.eql(200000); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  }
-                              ]
-                 },
-                 {
-                     "name":  "Business operations",
-                     "item":  [
-                                  {
-                                      "name":  "Create business vacancy",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/vacancies",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"title\": \"Business vacancy {{}}\",\n  \"description\": \"Business flow\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 150000,\n  \"salaryTo\": 230000,\n  \"status\": \"OPEN\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Business vacancy created\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"businessVacancyId\", pm.response.json().id);"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Create business candidate",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/candidates",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"fullName\": \"Business Candidate {{}}\",\n  \"email\": \"business.candidate.{{}}@example.com\",\n  \"phone\": \"+79991111111\",\n  \"resume\": \"Java, interviews\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Business candidate created\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"businessCandidateId\", pm.response.json().id);"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Apply for vacancy",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/business/applications/apply",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"vacancyId\": {{businessVacancyId}},\n  \"candidateId\": {{businessCandidateId}}\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Application business operation works\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"businessApplicationId\", pm.response.json().id);",
-                                                                                "pm.test(\"Application status is NEW\", function () { pm.expect(pm.response.json().status).to.eql(\"NEW\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Schedule interview",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/business/interviews/schedule",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"applicationId\": {{businessApplicationId}},\n  \"interviewer\": \"Tech lead {{}}\",\n  \"startsAt\": \"2026-04-23T10:00:00\",\n  \"endsAt\": \"2026-04-23T11:00:00\"\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Schedule interview operation works\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"businessInterviewId\", pm.response.json().id);",
-                                                                                "pm.test(\"Interview status is PLANNED\", function () { pm.expect(pm.response.json().status).to.eql(\"PLANNED\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Complete interview",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/business/interviews/{{businessInterviewId}}/complete",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"successful\": true\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Complete interview operation works\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Interview completed\", function () { pm.expect(pm.response.json().status).to.eql(\"COMPLETED\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Create offer after interview",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/business/offers/create",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "Content-Type",
-                                                                         "value":  "application/json"
-                                                                     },
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ],
-                                                      "body":  {
-                                                                   "mode":  "raw",
-                                                                   "raw":  "{\n  \"applicationId\": {{businessApplicationId}},\n  \"salary\": 230000\n}"
-                                                               }
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Create offer operation works\", function () { pm.response.to.have.status(201); });",
-                                                                                "pm.environment.set(\"businessOfferId\", pm.response.json().id);",
-                                                                                "pm.test(\"Offer status is SENT\", function () { pm.expect(pm.response.json().status).to.eql(\"SENT\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Accept offer",
-                                      "request":  {
-                                                      "method":  "POST",
-                                                      "url":  "{{baseUrl}}/api/business/offers/{{businessOfferId}}/accept",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ]
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Accept offer operation works\", function () { pm.response.to.have.status(200); });",
-                                                                                "pm.test(\"Offer accepted\", function () { pm.expect(pm.response.json().status).to.eql(\"ACCEPTED\"); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  }
-                              ]
-                 },
-                 {
-                     "name":  "Cleanup checks",
-                     "item":  [
-                                  {
-                                      "name":  "Delete offer",
-                                      "request":  {
-                                                      "method":  "DELETE",
-                                                      "url":  "{{baseUrl}}/api/offers/{{offerId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ]
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Offer deleted\", function () { pm.response.to.have.status(204); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Delete interview",
-                                      "request":  {
-                                                      "method":  "DELETE",
-                                                      "url":  "{{baseUrl}}/api/interviews/{{interviewId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ]
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Interview deleted\", function () { pm.response.to.have.status(204); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Delete application",
-                                      "request":  {
-                                                      "method":  "DELETE",
-                                                      "url":  "{{baseUrl}}/api/applications/{{applicationId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ]
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Application deleted\", function () { pm.response.to.have.status(204); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Delete candidate",
-                                      "request":  {
-                                                      "method":  "DELETE",
-                                                      "url":  "{{baseUrl}}/api/candidates/{{candidateId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ]
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Candidate deleted\", function () { pm.response.to.have.status(204); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  },
-                                  {
-                                      "name":  "Delete vacancy",
-                                      "request":  {
-                                                      "method":  "DELETE",
-                                                      "url":  "{{baseUrl}}/api/vacancies/{{vacancyId}}",
-                                                      "header":  [
-                                                                     {
-                                                                         "key":  "X-XSRF-TOKEN",
-                                                                         "value":  "{{csrfToken}}"
-                                                                     }
-                                                                 ]
-                                                  },
-                                      "event":  {
-                                                    "listen":  "test",
-                                                    "script":  {
-                                                                   "type":  "text/javascript",
-                                                                   "exec":  [
-                                                                                "pm.test(\"Vacancy deleted\", function () { pm.response.to.have.status(204); });"
-                                                                            ]
-                                                               }
-                                                }
-                                  }
-                              ]
-                 }
-             ]
+{
+  "info": {
+    "name": "rbpovako",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{adminUsername}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Admin login works\", function () { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.environment.set(\"adminAccessToken\", body.accessToken);",
+                  "pm.environment.set(\"adminRefreshToken\", body.refreshToken);",
+                  "pm.test(\"Admin tokens saved\", function () {",
+                  "  pm.expect(pm.environment.get(\"adminAccessToken\")).to.not.be.empty;",
+                  "  pm.expect(pm.environment.get(\"adminRefreshToken\")).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current admin user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Bearer token works\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Current user is admin\", function () { pm.expect(pm.response.json().username).to.eql(pm.environment.get(\"adminUsername\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register candidate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{candidateUsername}}\",\n  \"email\": \"{{candidateEmail}}\",\n  \"password\": \"{{candidatePassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var runId = pm.environment.get(\"runId\");",
+                  "if (!runId) {",
+                  "  runId = String(Date.now());",
+                  "  pm.environment.set(\"runId\", runId);",
+                  "}",
+                  "pm.environment.set(\"candidateUsername\", \"candidate_\" + runId);",
+                  "pm.environment.set(\"candidateEmail\", \"candidate_\" + runId + \"@example.com\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Candidate registration works\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Registered user has candidate role\", function () { pm.expect(pm.response.json().role).to.eql(\"CANDIDATE\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login candidate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{candidateUsername}}\",\n  \"password\": \"{{candidatePassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Candidate login works\", function () { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.environment.set(\"candidateAccessToken\", body.accessToken);",
+                  "pm.environment.set(\"candidateRefreshToken\", body.refreshToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh admin token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{adminRefreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Refresh works\", function () { pm.response.to.have.status(200); });",
+                  "pm.environment.set(\"previousAdminRefreshToken\", pm.environment.get(\"adminRefreshToken\"));",
+                  "var body = pm.response.json();",
+                  "pm.environment.set(\"adminAccessToken\", body.accessToken);",
+                  "pm.environment.set(\"adminRefreshToken\", body.refreshToken);",
+                  "pm.test(\"Refresh token rotated\", function () { pm.expect(pm.environment.get(\"previousAdminRefreshToken\")).to.not.eql(pm.environment.get(\"adminRefreshToken\")); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reuse old refresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{previousAdminRefreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Old refresh token is rejected\", function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CRUD scenario",
+      "item": [
+        {
+          "name": "Create vacancy",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/vacancies",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Java developer {{runId}}\",\n  \"description\": \"Spring Boot project\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 120000,\n  \"salaryTo\": 180000,\n  \"status\": \"OPEN\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Vacancy created\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"vacancyId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get vacancies",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/vacancies",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Vacancy list returned\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get vacancy",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/vacancies/{{vacancyId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Vacancy returned\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Vacancy id matches\", function () { pm.expect(pm.response.json().id).to.eql(Number(pm.environment.get(\"vacancyId\"))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update vacancy",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/vacancies/{{vacancyId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Senior Java developer\",\n  \"description\": \"Spring Boot project\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 180000,\n  \"salaryTo\": 240000,\n  \"status\": \"OPEN\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Vacancy updated\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Vacancy title updated\", function () { pm.expect(pm.response.json().title).to.eql(\"Postman Senior Java developer\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create candidate",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/candidates",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Candidate {{runId}}\",\n  \"email\": \"postman.candidate.{{runId}}@example.com\",\n  \"phone\": \"+79990000000\",\n  \"resume\": \"Java, SQL, Spring\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Candidate created\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"candidateId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get candidates",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/candidates",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Candidate list returned\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get candidate",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/candidates/{{candidateId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Candidate returned\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update candidate",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/candidates/{{candidateId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Postman Candidate Updated\",\n  \"email\": \"postman.candidate.updated.{{runId}}@example.com\",\n  \"phone\": \"+79990000001\",\n  \"resume\": \"Java, SQL, Spring Boot\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Candidate updated\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Candidate name updated\", function () { pm.expect(pm.response.json().fullName).to.eql(\"Postman Candidate Updated\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create application",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/applications",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}},\n  \"status\": \"NEW\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Application created\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"applicationId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get applications",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/applications",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Application list returned\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get application",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/applications/{{applicationId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Application returned\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update application",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/applications/{{applicationId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vacancyId\": {{vacancyId}},\n  \"candidateId\": {{candidateId}},\n  \"status\": \"IN_REVIEW\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Application updated\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Application status updated\", function () { pm.expect(pm.response.json().status).to.eql(\"IN_REVIEW\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create interview",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/interviews",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"HR manager\",\n  \"startsAt\": \"2026-04-22T10:00:00\",\n  \"endsAt\": \"2026-04-22T11:00:00\",\n  \"status\": \"PLANNED\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Interview created\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"interviewId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get interviews",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/interviews",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Interview list returned\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get interview",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/interviews/{{interviewId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Interview returned\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update interview",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/interviews/{{interviewId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"interviewer\": \"HR manager\",\n  \"startsAt\": \"2026-04-22T10:00:00\",\n  \"endsAt\": \"2026-04-22T11:00:00\",\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Interview updated\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Interview status updated\", function () { pm.expect(pm.response.json().status).to.eql(\"COMPLETED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create offer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/offers",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"candidateId\": {{candidateId}},\n  \"salary\": 190000,\n  \"status\": \"SENT\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Offer created\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"offerId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get offers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/offers",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Offer list returned\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get offer",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/offers/{{offerId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Offer returned\", function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update offer",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/offers/{{offerId}}",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": {{applicationId}},\n  \"candidateId\": {{candidateId}},\n  \"salary\": 200000,\n  \"status\": \"SENT\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Offer updated\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Offer salary updated\", function () { pm.expect(Number(pm.response.json().salary)).to.eql(200000); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Business operations",
+      "item": [
+        {
+          "name": "Create business vacancy",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/vacancies",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Business vacancy {{runId}}\",\n  \"description\": \"Business flow\",\n  \"department\": \"IT\",\n  \"salaryFrom\": 150000,\n  \"salaryTo\": 230000,\n  \"status\": \"OPEN\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Business vacancy created\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"businessVacancyId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create business candidate",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/candidates",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Business Candidate {{runId}}\",\n  \"email\": \"business.candidate.{{runId}}@example.com\",\n  \"phone\": \"+79991111111\",\n  \"resume\": \"Java, interviews\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Business candidate created\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"businessCandidateId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Apply for vacancy",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/business/applications/apply",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vacancyId\": {{businessVacancyId}},\n  \"candidateId\": {{businessCandidateId}}\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Application business operation works\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"businessApplicationId\", pm.response.json().id);",
+                  "pm.test(\"Application status is NEW\", function () { pm.expect(pm.response.json().status).to.eql(\"NEW\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Schedule interview",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/business/interviews/schedule",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": {{businessApplicationId}},\n  \"interviewer\": \"Tech lead {{runId}}\",\n  \"startsAt\": \"2026-04-23T10:00:00\",\n  \"endsAt\": \"2026-04-23T11:00:00\"\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Schedule interview operation works\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"businessInterviewId\", pm.response.json().id);",
+                  "pm.test(\"Interview status is PLANNED\", function () { pm.expect(pm.response.json().status).to.eql(\"PLANNED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete interview",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/business/interviews/{{businessInterviewId}}/complete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"successful\": true\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Complete interview operation works\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Interview completed\", function () { pm.expect(pm.response.json().status).to.eql(\"COMPLETED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create offer after interview",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/business/offers/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"applicationId\": {{businessApplicationId}},\n  \"salary\": 230000\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Create offer operation works\", function () { pm.response.to.have.status(201); });",
+                  "pm.environment.set(\"businessOfferId\", pm.response.json().id);",
+                  "pm.test(\"Offer status is SENT\", function () { pm.expect(pm.response.json().status).to.eql(\"SENT\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accept offer",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/business/offers/{{businessOfferId}}/accept",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{candidateAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Accept offer operation works\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Offer accepted\", function () { pm.expect(pm.response.json().status).to.eql(\"ACCEPTED\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cleanup checks",
+      "item": [
+        {
+          "name": "Delete offer",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/offers/{{offerId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Offer deleted\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete interview",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/interviews/{{interviewId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Interview deleted\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete application",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/applications/{{applicationId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Application deleted\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete candidate",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/candidates/{{candidateId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Candidate deleted\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete vacancy",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/vacancies/{{vacancyId}}",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Vacancy deleted\", function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
