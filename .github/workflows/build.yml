@@ -113,11 +113,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
+      - name: Configure Java
+        run: |
+          echo "JAVA_HOME=C:\Users\danil\.jdks\openjdk-25" >> $env:GITHUB_ENV
+          echo "C:\Users\danil\.jdks\openjdk-25\bin" >> $env:GITHUB_PATH
+        shell: powershell
 
       - name: Prepare Maven Wrapper
         run: |
