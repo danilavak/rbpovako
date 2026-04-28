@@ -5,32 +5,45 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**"))
+                        .ignoringRequestMatchers(
+                                "/h2-console/**",
+                                "/auth/**",
+                                "/api/**"
+                        )
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(withDefaults())
                 .formLogin(form -> form.disable())
+                .addFilterBefore(jwtAuthenticationFilter, BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.GET, "/", "/health", "/api/csrf").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login", "/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/vacancies/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/vacancies").hasAnyRole("HR", "ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/vacancies/**").hasAnyRole("HR", "ADMIN")
@@ -47,6 +60,11 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 );
         return http.build();
+    }
+
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 
     @Bean

@@ -17,4 +17,9 @@ final class JsonTestHelper {
         JsonNode node = OBJECT_MAPPER.readTree(json);
         return node.get(field).asLong();
     }
+
+    static String stringValueFrom(String json, String field) throws Exception {
+        JsonNode node = OBJECT_MAPPER.readTree(json);
+        return node.get(field).asText();
+    }
 }
