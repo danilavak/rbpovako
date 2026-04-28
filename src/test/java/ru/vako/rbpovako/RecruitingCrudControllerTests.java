@@ -1,5 +1,6 @@
 package ru.vako.rbpovako;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.equalTo;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -10,16 +11,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import ru.vako.rbpovako.model.SessionStatus;
+import ru.vako.rbpovako.model.UserSession;
 import ru.vako.rbpovako.model.UserRole;
+import ru.vako.rbpovako.repository.UserSessionRepository;
 import ru.vako.rbpovako.service.UserAccountService;
 
 @SpringBootTest
@@ -34,6 +41,9 @@ class RecruitingCrudControllerTests {
 
     @Autowired
     private UserAccountService userAccountService;
+
+    @Autowired
+    private UserSessionRepository userSessionRepository;
 
     private String adminUsername;
     private String hrUsername;
@@ -295,6 +305,57 @@ class RecruitingCrudControllerTests {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void jwtLoginRefreshAndSessionRotationWork() throws Exception {
+        String loginResponse = login(candidateUsername, CANDIDATE_PASSWORD);
+        String accessToken = JsonTestHelper.stringValueFrom(loginResponse, "accessToken");
+        String refreshToken = JsonTestHelper.stringValueFrom(loginResponse, "refreshToken");
+
+        mockMvc.perform(get("/auth/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(accessToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username", equalTo(candidateUsername)));
+
+        String refreshResponse = refresh(refreshToken);
+        String rotatedAccessToken = JsonTestHelper.stringValueFrom(refreshResponse, "accessToken");
+        String rotatedRefreshToken = JsonTestHelper.stringValueFrom(refreshResponse, "refreshToken");
+
+        mockMvc.perform(get("/auth/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(rotatedAccessToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username", equalTo(candidateUsername)));
+
+        mockMvc.perform(post("/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "refreshToken": "%s"
+                                }
+                                """.formatted(refreshToken)))
+                .andExpect(status().isUnauthorized());
+
+        List<UserSession> userSessions = userSessionRepository.findAllByUserAccountUsernameOrderByIdAsc(candidateUsername);
+
+        org.hamcrest.MatcherAssert.assertThat(userSessions, hasSize(2));
+        org.hamcrest.MatcherAssert.assertThat(userSessions.get(0).getStatus(), equalTo(SessionStatus.ROTATED));
+        org.hamcrest.MatcherAssert.assertThat(userSessions.get(1).getStatus(), equalTo(SessionStatus.ACTIVE));
+        org.hamcrest.MatcherAssert.assertThat(
+                userSessions.get(0).getRefreshTokenId().equals(userSessions.get(1).getRefreshTokenId()),
+                equalTo(false)
+        );
+
+        mockMvc.perform(post("/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "refreshToken": "%s"
+                                }
+                                """.formatted(rotatedRefreshToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.refreshToken").isString());
+    }
+
     private String create(String path, String body) throws Exception {
         return createAs(path, body, hrUsername, HR_PASSWORD);
     }
@@ -352,5 +413,42 @@ class RecruitingCrudControllerTests {
                 }
                 """.formatted(fullName, email));
         return JsonTestHelper.idFrom(candidate);
+    }
+
+    private String login(String username, String password) throws Exception {
+        return mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "%s",
+                                  "password": "%s"
+                                }
+                                """.formatted(username, password)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.refreshToken").isString())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+    }
+
+    private String refresh(String refreshToken) throws Exception {
+        return mockMvc.perform(post("/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "refreshToken": "%s"
+                                }
+                                """.formatted(refreshToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.refreshToken").isString())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+    }
+
+    private String bearer(String token) {
+        return "Bearer " + token;
     }
 }
