@@ -265,6 +265,10 @@ class RecruitingCrudControllerTests {
         mockMvc.perform(get("/api/candidates"))
                 .andExpect(status().isUnauthorized());
 
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openapi").exists());
+
         mockMvc.perform(post("/auth/register")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)

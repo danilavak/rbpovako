@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
                 .addFilterBefore(jwtAuthenticationFilter, BasicAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/", "/health", "/api/csrf").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/", "/health", "/api/csrf", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login", "/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/vacancies/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/vacancies").hasAnyRole("HR", "ADMIN")

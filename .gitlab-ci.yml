@@ -3,6 +3,13 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
     - when: never
 
+variables:
+  JAVA_HOME: /c/Users/danil/.jdks/openjdk-25
+
+default:
+  before_script:
+    - export PATH="$JAVA_HOME/bin:$PATH"
+
 stages:
   - build
   - test
@@ -47,3 +54,61 @@ sca:
     when: always
     paths:
       - target/dependency-check-report.html
+
+dast_baseline:
+  stage: test
+  tags:
+    - saas-linux-small-amd64
+  image:
+    name: zaproxy/zap-stable
+    entrypoint: [""]
+  needs:
+    - job: build
+      artifacts: true
+  script:
+    - mkdir -p target/zap
+    - touch .zap/rules.tsv
+    - trap 'if [ -f target/zap/app.pid ]; then kill "$(cat target/zap/app.pid)" || true; fi' EXIT
+    - java -jar target/*.jar > target/zap/app.log 2>&1 &
+    - echo $! > target/zap/app.pid
+    - sleep 30
+    - curl --fail --silent http://localhost:8080/health > /dev/null
+    - zap-baseline.py -t http://localhost:8080 -c .zap/rules.tsv -r target/zap/zap-baseline-report.html -w target/zap/zap-baseline-report.md -J target/zap/zap-baseline-report.json || true
+  after_script:
+    - if [ -f target/zap/app.pid ]; then kill "$(cat target/zap/app.pid)" || true; fi
+  artifacts:
+    when: always
+    paths:
+      - target/zap/zap-baseline-report.html
+      - target/zap/zap-baseline-report.md
+      - target/zap/zap-baseline-report.json
+      - target/zap/app.log
+
+dast_api:
+  stage: test
+  tags:
+    - saas-linux-small-amd64
+  image:
+    name: zaproxy/zap-stable
+    entrypoint: [""]
+  needs:
+    - job: build
+      artifacts: true
+  script:
+    - mkdir -p target/zap
+    - touch .zap/rules.tsv
+    - trap 'if [ -f target/zap/app.pid ]; then kill "$(cat target/zap/app.pid)" || true; fi' EXIT
+    - java -jar target/*.jar > target/zap/app.log 2>&1 &
+    - echo $! > target/zap/app.pid
+    - sleep 30
+    - curl --fail --silent http://localhost:8080/health > /dev/null
+    - zap-api-scan.py -t http://localhost:8080/v3/api-docs -f openapi -c .zap/rules.tsv -r target/zap/zap-api-report.html -w target/zap/zap-api-report.md -J target/zap/zap-api-report.json || true
+  after_script:
+    - if [ -f target/zap/app.pid ]; then kill "$(cat target/zap/app.pid)" || true; fi
+  artifacts:
+    when: always
+    paths:
+      - target/zap/zap-api-report.html
+      - target/zap/zap-api-report.md
+      - target/zap/zap-api-report.json
+      - target/zap/app.log
